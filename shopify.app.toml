@@ -2,7 +2,7 @@
 
 client_id = "fafc65df8aa91ca91e66cbf53455b3a4"
 name = "dialnexa"
-application_url = "https://example.com"
+application_url = "https://dialedin-pi.vercel.app"
 embedded = true
 
 [access_scopes]
@@ -45,8 +45,11 @@ api_version = "2026-07"
   topics = [ "app/scopes_update" ]
 
 [auth]
-redirect_urls = [ "https://example.com/api/auth" ]
+redirect_urls = [
+  "https://dialedin-pi.vercel.app/api/auth",
+  "https://dialedin-pi.vercel.app/auth/callback",
+  "https://dialedin-pi.vercel.app/auth/shopify/callback"
+]
 
 [build]
-include_config_on_deploy = true
 automatically_update_urls_on_dev = true
