@@ -21,9 +21,11 @@ export default function App() {
   return (
     <div className={styles.index}>
       <div className={styles.content}>
-        <h1 className={styles.heading}>A short heading about [your app]</h1>
+        <h1 className={styles.heading}>
+          Automated Shopify order calls with Dialnexa
+        </h1>
         <p className={styles.text}>
-          A tagline about [your app] that describes your value proposition.
+          Confirm new orders automatically with a personalized AI voice call.
         </p>
         {showForm && (
           <Form className={styles.form} method="post" action="/auth/login">
@@ -39,16 +41,16 @@ export default function App() {
         )}
         <ul className={styles.list}>
           <li>
-            <strong>Product feature</strong>. Some detail about your feature and
-            its benefit to your customer.
+            <strong>Automatic order confirmation.</strong> Start a call when a
+            customer completes checkout.
           </li>
           <li>
-            <strong>Product feature</strong>. Some detail about your feature and
-            its benefit to your customer.
+            <strong>Personalized conversations.</strong> Pass the customer name,
+            order number, amount, and currency to your Dialnexa agent.
           </li>
           <li>
-            <strong>Product feature</strong>. Some detail about your feature and
-            its benefit to your customer.
+            <strong>Privacy-first processing.</strong> Customer phone numbers
+            are used in memory and are not stored by this app.
           </li>
         </ul>
       </div>

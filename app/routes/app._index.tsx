@@ -13,16 +13,18 @@ const APP_METAFIELD_NAMESPACE = "dialnexa";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { admin } = await authenticate.admin(request);
-  
+
   const response = await admin.graphql(`
     #graphql
     query {
       currentAppInstallation {
-        id
         apiKeyMetafield: metafield(namespace: "${APP_METAFIELD_NAMESPACE}", key: "api_key") {
           value
         }
         agentIdMetafield: metafield(namespace: "${APP_METAFIELD_NAMESPACE}", key: "agent_id") {
+          value
+        }
+        callingEnabledMetafield: metafield(namespace: "${APP_METAFIELD_NAMESPACE}", key: "calling_enabled") {
           value
         }
       }
@@ -30,22 +32,86 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   `);
 
   const { data } = await response.json();
-  const appId = data?.currentAppInstallation?.id;
-  const apiKey = data?.currentAppInstallation?.apiKeyMetafield?.value || "";
   const agentId = data?.currentAppInstallation?.agentIdMetafield?.value || "";
+  const hasApiKey = Boolean(
+    data?.currentAppInstallation?.apiKeyMetafield?.value,
+  );
+  const callingEnabled =
+    data?.currentAppInstallation?.callingEnabledMetafield?.value === "true";
 
-  return { appId, config: { apiKey, agentId } };
+  return { config: { agentId, hasApiKey, callingEnabled } };
 };
 
 export const action = async ({ request }: ActionFunctionArgs) => {
   const { admin } = await authenticate.admin(request);
   const formData = await request.formData();
-  
-  const apiKey = String(formData.get("apiKey"));
-  const agentId = String(formData.get("agentId"));
-  const appId = String(formData.get("appId"));
 
-  const response = await admin.graphql(`
+  const apiKey = String(formData.get("apiKey") || "").trim();
+  const agentId = String(formData.get("agentId") || "").trim();
+  const callingEnabled = formData.get("callingEnabled") === "on";
+
+  const installationResponse = await admin.graphql(`
+    #graphql
+    query DialnexaInstallationForUpdate {
+      currentAppInstallation {
+        id
+        apiKeyMetafield: metafield(namespace: "${APP_METAFIELD_NAMESPACE}", key: "api_key") {
+          value
+        }
+      }
+    }
+  `);
+  const installationJson = await installationResponse.json();
+  const appId = installationJson.data?.currentAppInstallation?.id;
+  const hasExistingApiKey = Boolean(
+    installationJson.data?.currentAppInstallation?.apiKeyMetafield?.value,
+  );
+
+  if (!appId || (callingEnabled && !apiKey && !hasExistingApiKey)) {
+    return {
+      success: false,
+      errors: [
+        {
+          message: !appId
+            ? "Could not load the current app installation."
+            : "An API key is required before automatic calling can be enabled.",
+        },
+      ],
+    };
+  }
+
+  const metafieldsSetInput = [
+    {
+      ownerId: appId,
+      namespace: APP_METAFIELD_NAMESPACE,
+      key: "calling_enabled",
+      value: String(callingEnabled),
+      type: "boolean",
+    },
+  ];
+
+  if (agentId) {
+    metafieldsSetInput.push({
+      ownerId: appId,
+      namespace: APP_METAFIELD_NAMESPACE,
+      key: "agent_id",
+      value: agentId,
+      type: "single_line_text_field",
+    });
+  }
+
+  if (apiKey) {
+    metafieldsSetInput.push({
+      ownerId: appId,
+      namespace: APP_METAFIELD_NAMESPACE,
+      key: "api_key",
+      value: apiKey,
+      type: "single_line_text_field",
+    });
+  }
+
+  const response = await admin.graphql(
+    `
     #graphql
     mutation CreateAppDataMetafield($metafieldsSetInput: [MetafieldsSetInput!]!) {
       metafieldsSet(metafields: $metafieldsSetInput) {
@@ -55,37 +121,24 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         }
       }
     }
-  `, {
-    variables: {
-      metafieldsSetInput: [
-        {
-          ownerId: appId,
-          namespace: APP_METAFIELD_NAMESPACE,
-          key: "api_key",
-          value: apiKey,
-          type: "single_line_text_field"
-        },
-        {
-          ownerId: appId,
-          namespace: APP_METAFIELD_NAMESPACE,
-          key: "agent_id",
-          value: agentId,
-          type: "single_line_text_field"
-        }
-      ]
-    }
-  });
+  `,
+    {
+      variables: {
+        metafieldsSetInput,
+      },
+    },
+  );
 
   const { data } = await response.json();
   if (data?.metafieldsSet?.userErrors?.length) {
     return { success: false, errors: data.metafieldsSet.userErrors };
   }
 
-  return { success: true, config: { apiKey, agentId } };
+  return { success: true };
 };
 
 export default function Index() {
-  const { appId, config } = useLoaderData<typeof loader>();
+  const { config } = useLoaderData<typeof loader>();
   const fetcher = useFetcher<typeof action>();
   const shopify = useAppBridge();
 
@@ -105,33 +158,90 @@ export default function Index() {
     <s-page heading="Dialnexa App Integration">
       <s-section heading="Connect your Dialnexa Account">
         <s-paragraph>
-          Enter your Dialnexa API Key and default Agent ID to connect your store. 
-          Once connected, this app will automatically trigger an outbound call whenever a new order is placed.
+          Enter your Dialnexa API key to connect your store, then open Use cases
+          to create merchant-specific agents directly in Dialnexa. The default
+          Agent ID below remains available for existing installations.
         </s-paragraph>
-        
-        <fetcher.Form method="POST" style={{ marginTop: '20px' }}>
-          <input type="hidden" name="appId" value={appId} />
+
+        <fetcher.Form method="POST" style={{ marginTop: "20px" }}>
           <s-stack direction="block" gap="base">
-            <s-box padding="base" borderWidth="base" borderRadius="base" background="subdued">
-              <label style={{display: 'block', marginBottom: '8px', fontWeight: 'bold'}}>Dialnexa API Key</label>
-              <input 
-                type="password" 
-                name="apiKey" 
-                defaultValue={config?.apiKey || ""} 
-                placeholder="sk_..."
-                style={{width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc', marginBottom: '16px'}}
-                required
+            <s-box
+              padding="base"
+              borderWidth="base"
+              borderRadius="base"
+              background="subdued"
+            >
+              <label
+                htmlFor="apiKey"
+                style={{
+                  display: "block",
+                  marginBottom: "8px",
+                  fontWeight: "bold",
+                }}
+              >
+                Dialnexa API Key
+              </label>
+              <input
+                id="apiKey"
+                type="password"
+                name="apiKey"
+                autoComplete="new-password"
+                placeholder={
+                  config.hasApiKey
+                    ? "Saved — enter a new key to replace it"
+                    : "Enter API key"
+                }
+                style={{
+                  width: "100%",
+                  padding: "8px",
+                  borderRadius: "4px",
+                  border: "1px solid #ccc",
+                  marginBottom: "16px",
+                }}
+                required={!config.hasApiKey}
               />
-              
-              <label style={{display: 'block', marginBottom: '8px', fontWeight: 'bold'}}>Default Agent ID</label>
-              <input 
-                type="text" 
-                name="agentId" 
-                defaultValue={config?.agentId || ""} 
-                placeholder="agent_..."
-                style={{width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc'}}
-                required
+
+              <label
+                htmlFor="agentId"
+                style={{
+                  display: "block",
+                  marginBottom: "8px",
+                  fontWeight: "bold",
+                }}
+              >
+                Legacy default Agent ID (optional)
+              </label>
+              <input
+                id="agentId"
+                type="text"
+                name="agentId"
+                defaultValue={config?.agentId || ""}
+                placeholder="agt_..."
+                style={{
+                  width: "100%",
+                  padding: "8px",
+                  borderRadius: "4px",
+                  border: "1px solid #ccc",
+                }}
               />
+
+              <label
+                htmlFor="callingEnabled"
+                style={{
+                  display: "flex",
+                  gap: "8px",
+                  alignItems: "center",
+                  marginTop: "16px",
+                }}
+              >
+                <input
+                  id="callingEnabled"
+                  type="checkbox"
+                  name="callingEnabled"
+                  defaultChecked={config.callingEnabled}
+                />
+                Enable legacy default-agent calls for new orders
+              </label>
             </s-box>
 
             <s-button
@@ -154,7 +264,12 @@ export default function Index() {
             When a customer completes a checkout, Shopify notifies this app.
           </s-list-item>
           <s-list-item>
-            This app uses the API Key and Agent ID above to trigger an outbound call to the customer via Dialnexa.
+            If calling is enabled and the order contains a valid international
+            phone number, this app starts one Dialnexa call for that order.
+          </s-list-item>
+          <s-list-item>
+            Duplicate Shopify webhook deliveries are ignored, and no customer
+            phone number is stored by this app.
           </s-list-item>
         </s-unordered-list>
       </s-section>

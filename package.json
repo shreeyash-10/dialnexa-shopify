@@ -3,6 +3,7 @@
   "private": true,
   "scripts": {
     "build": "react-router build",
+    "vercel-build": "prisma generate && prisma migrate deploy && react-router build",
     "dev": "shopify app dev",
     "config:link": "shopify app config link",
     "generate": "shopify app generate",
@@ -12,7 +13,10 @@
     "start": "react-router-serve ./build/server/index.js",
     "docker-start": "npm run setup && npm run start",
     "setup": "prisma generate && prisma migrate deploy",
+    "postinstall": "prisma generate",
     "lint": "eslint --ignore-path .gitignore --cache --cache-location ./node_modules/.cache/eslint .",
+    "test": "vitest run",
+    "export:agent-templates": "node scripts/run-export-agent-templates.mjs",
     "shopify": "shopify",
     "prisma": "prisma",
     "graphql-codegen": "graphql-codegen",
@@ -37,8 +41,7 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router": "^7.12.0",
-    "vite-tsconfig-paths": "^5.1.4",
-    "@shopify/cli": "3.94.3"
+    "vite-tsconfig-paths": "^5.1.4"
   },
   "devDependencies": {
     "@shopify/api-codegen-preset": "^1.2.0",
@@ -56,9 +59,11 @@
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^4.6.2",
     "graphql-config": "^5.1.1",
+    "@shopify/cli": "3.94.3",
     "prettier": "^3.6.2",
     "typescript": "^5.9.3",
-    "vite": "^6.3.6"
+    "vite": "^6.3.6",
+    "vitest": "^3.2.4"
   },
   "workspaces": [
     "extensions/*"

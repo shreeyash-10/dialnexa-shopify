@@ -9,27 +9,129 @@ generator client {
 // enough when changing adapters.
 // See https://www.prisma.io/docs/orm/reference/prisma-schema-reference#string for more information
 datasource db {
-  provider = "sqlite"
-  url      = "file:dev.sqlite"
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model OrderCall {
+  id                 String    @id @default(cuid())
+  shop               String
+  orderId            String
+  webhookId          String
+  workflow           String?
+  recipientHash      String?
+  status             String    @default("queued")
+  attempts           Int       @default(0)
+  dialnexaCallId     String?
+  resolved           Boolean?
+  outcome            String?
+  needsHumanFollowUp Boolean?
+  error              String?
+  availableAt        DateTime  @default(now())
+  lockedAt           DateTime?
+  completedAt        DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  @@unique([shop, orderId])
+  @@unique([shop, webhookId])
+  @@index([shop, status])
+  @@index([status, availableAt])
+  @@index([shop, recipientHash, createdAt])
+  @@index([dialnexaCallId])
+}
+
+model CallSuppression {
+  id            String   @id @default(cuid())
+  shop          String
+  recipientHash String
+  reason        String
+  createdAt     DateTime @default(now())
+
+  @@unique([shop, recipientHash])
+}
+
+model AgentProvisioning {
+  id              String   @id @default(cuid())
+  shop            String
+  useCaseId       String
+  templateVersion Int
+  status          String
+  agentId         String?
+  error           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([shop, useCaseId])
+  @@index([status, updatedAt])
+}
+
+model StockAlertSubscription {
+  id                String    @id @default(cuid())
+  shop              String
+  inventoryItemId   String
+  dedupeKey         String
+  encryptedPayload  String
+  status            String    @default("pending")
+  consentRecordedAt DateTime
+  notifiedAt        DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@unique([shop, dedupeKey])
+  @@index([shop, inventoryItemId, status])
+}
+
+model UseCaseCall {
+  id                 String    @id @default(cuid())
+  shop               String
+  useCaseId          String
+  source             String
+  dedupeKey          String
+  encryptedPayload   String?
+  recipientHash      String?
+  status             String    @default("queued")
+  attempts           Int       @default(0)
+  dialnexaCallId     String?
+  resolved           Boolean?
+  outcome            String?
+  needsHumanFollowUp Boolean?
+  error              String?
+  availableAt        DateTime  @default(now())
+  lockedAt           DateTime?
+  completedAt        DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  @@unique([shop, dedupeKey])
+  @@index([status, availableAt])
+  @@index([shop, useCaseId, status])
+  @@index([shop, recipientHash, createdAt])
+  @@index([dialnexaCallId])
+}
+
+model SchedulerState {
+  name       String   @id
+  cursorShop String?
+  updatedAt  DateTime @updatedAt
 }
 
 model Session {
-  id            String    @id
-  shop          String
-  state         String
-  isOnline      Boolean   @default(false)
-  scope         String?
-  expires       DateTime?
-  accessToken   String
-  userId        BigInt?
-  firstName     String?
-  lastName      String?
-  email         String?
-  accountOwner  Boolean   @default(false)
-  locale        String?
-  collaborator  Boolean?  @default(false)
-  emailVerified Boolean?  @default(false)
+  id                  String    @id
+  shop                String
+  state               String
+  isOnline            Boolean   @default(false)
+  scope               String?
+  expires             DateTime?
+  accessToken         String
+  userId              BigInt?
+  firstName           String?
+  lastName            String?
+  email               String?
+  accountOwner        Boolean   @default(false)
+  locale              String?
+  collaborator        Boolean?  @default(false)
+  emailVerified       Boolean?  @default(false)
   refreshToken        String?
   refreshTokenExpires DateTime?
 }
-

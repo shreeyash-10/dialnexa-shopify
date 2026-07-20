@@ -7,34 +7,10 @@ embedded = true
 
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
-scopes = "write_products,write_metaobjects,write_metaobject_definitions"
-
-[product.metafields.app.demo_info]
-type = "single_line_text_field"
-name = "Demo Source Info"
-description = "Tracks products created by the Shopify app template for development"
-
-  [product.metafields.app.demo_info.access]
-  admin = "merchant_read_write"
-
-[metaobjects.app.example]
-name = "Example"
-description = "An example metaobject definition created by this template"
-
-  [metaobjects.app.example.access]
-  admin = "merchant_read_write"
-
-[metaobjects.app.example.fields.title]
-name = "Title"
-type = "single_line_text_field"
-required = true
-
-[metaobjects.app.example.fields.description]
-name = "Description"
-type = "multi_line_text_field"
+scopes = "read_customers,read_fulfillments,read_inventory,read_orders,read_own_subscription_contracts,read_products"
 
 [webhooks]
-api_version = "2026-07"
+api_version = "2026-04"
 
   [[webhooks.subscriptions]]
   uri = "/webhooks/app/uninstalled"
@@ -43,6 +19,30 @@ api_version = "2026-07"
   [[webhooks.subscriptions]]
   uri = "/webhooks/app/scopes_update"
   topics = [ "app/scopes_update" ]
+
+  [[webhooks.subscriptions]]
+  uri = "/webhooks/orders/create"
+  topics = [ "orders/create" ]
+
+  [[webhooks.subscriptions]]
+  uri = "/webhooks/orders/risk-assessment-changed"
+  topics = [ "orders/risk_assessment_changed" ]
+
+  [[webhooks.subscriptions]]
+  uri = "/webhooks/fulfillment-events/create"
+  topics = [ "fulfillment_events/create" ]
+
+  [[webhooks.subscriptions]]
+  uri = "/webhooks/inventory-levels/update"
+  topics = [ "inventory_levels/update" ]
+
+  [[webhooks.subscriptions]]
+  uri = "/webhooks/subscription-billing-attempts/failure"
+  topics = [ "subscription_billing_attempts/failure" ]
+
+  [[webhooks.subscriptions]]
+  uri = "/webhooks/compliance"
+  compliance_topics = [ "customers/data_request", "customers/redact", "shop/redact" ]
 
 [auth]
 redirect_urls = [
