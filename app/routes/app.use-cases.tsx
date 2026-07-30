@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import type {
   ActionFunctionArgs,
   HeadersFunction,
@@ -116,13 +116,28 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     companyName: data?.shop?.name || "Your company",
     hasApiKey: Boolean(installation?.apiKeyMetafield?.value),
     activated: parseActivatedUseCases(installation?.useCasesMetafield?.value),
-    useCases: USE_CASES.map(({ id, title, category, summary }) => ({
-      id,
-      title,
-      category,
-      summary,
-      runtime: getRuntimeUseCase(id),
-    })),
+    useCases: USE_CASES.map(
+      ({
+        id,
+        title,
+        category,
+        summary,
+        goal,
+        guidance,
+        successCriteria,
+        welcomeMessage,
+      }) => ({
+        id,
+        title,
+        category,
+        summary,
+        goal,
+        guidance,
+        successCriteria,
+        welcomeMessage,
+        runtime: getRuntimeUseCase(id),
+      }),
+    ),
   };
 };
 
@@ -374,6 +389,7 @@ export default function UseCasesPage() {
   } = useLoaderData<typeof loader>();
   const fetcher = useFetcher<typeof action>();
   const shopify = useAppBridge();
+  const [previewUseCaseId, setPreviewUseCaseId] = useState<string | null>(null);
   const pendingUseCaseId = String(fetcher.formData?.get("useCaseId") || "");
 
   useEffect(() => {
@@ -401,7 +417,7 @@ export default function UseCasesPage() {
             </s-paragraph>
           </s-banner>
         )}
-        {!hasApiKey && (
+        {automationEnabled && !hasApiKey && (
           <s-banner tone="warning" heading="Dialnexa API key required">
             <s-paragraph>
               Save your API key on Home before creating an agent after workflow
@@ -424,6 +440,7 @@ export default function UseCasesPage() {
           (!automationEnabled || (!needsUpgrade && !needsSafetyAttestation));
         const isPending =
           fetcher.state !== "idle" && pendingUseCaseId === useCase.id;
+        const isPreviewOpen = previewUseCaseId === useCase.id;
 
         return (
           <s-section key={useCase.id} heading={useCase.title}>
@@ -451,158 +468,207 @@ export default function UseCasesPage() {
                     : ""}
                 </s-paragraph>
               )}
-              <fetcher.Form method="POST">
-                <input type="hidden" name="useCaseId" value={useCase.id} />
-                <input
-                  type="hidden"
-                  name="intent"
-                  value={isDeactivation ? "deactivate" : "activate"}
-                />
-                {!isDeactivation && (
-                  <>
-                    <label
-                      style={{
-                        display: "flex",
-                        gap: "8px",
-                        alignItems: "flex-start",
-                        marginBottom: "12px",
-                      }}
-                    >
-                      <input type="checkbox" name="consentAttested" required />
-                      <span>
-                        I confirm that my store has the required lawful basis
-                        and customer consent for these automated calls.
-                      </span>
-                    </label>
-                    <div
-                      style={{
-                        display: "flex",
-                        gap: "12px",
-                        flexWrap: "wrap",
-                        marginBottom: "12px",
-                      }}
-                    >
-                      <label>
-                        Quiet hours start
-                        <br />
+              <s-button
+                type="button"
+                variant="secondary"
+                onClick={() =>
+                  setPreviewUseCaseId(isPreviewOpen ? null : useCase.id)
+                }
+              >
+                {isPreviewOpen ? "Hide template preview" : "Preview template"}
+              </s-button>
+              {isPreviewOpen && (
+                <s-box
+                  padding="base"
+                  borderWidth="base"
+                  borderRadius="base"
+                  background="subdued"
+                >
+                  <s-stack direction="block" gap="base">
+                    <s-paragraph>
+                      <strong>Goal:</strong> {useCase.goal}
+                    </s-paragraph>
+                    <s-paragraph>
+                      <strong>Safety guidance:</strong> {useCase.guidance}
+                    </s-paragraph>
+                    <s-paragraph>
+                      <strong>Successful outcome requires:</strong>
+                    </s-paragraph>
+                    <s-unordered-list>
+                      {useCase.successCriteria.map((criterion) => (
+                        <s-list-item key={criterion}>{criterion}</s-list-item>
+                      ))}
+                    </s-unordered-list>
+                    <s-paragraph>
+                      <strong>Opening message preview:</strong>{" "}
+                      {useCase.welcomeMessage}
+                    </s-paragraph>
+                  </s-stack>
+                </s-box>
+              )}
+              {automationEnabled || isActive ? (
+                <fetcher.Form method="POST">
+                  <input type="hidden" name="useCaseId" value={useCase.id} />
+                  <input
+                    type="hidden"
+                    name="intent"
+                    value={isDeactivation ? "deactivate" : "activate"}
+                  />
+                  {!isDeactivation && (
+                    <>
+                      <label
+                        style={{
+                          display: "flex",
+                          gap: "8px",
+                          alignItems: "flex-start",
+                          marginBottom: "12px",
+                        }}
+                      >
                         <input
-                          type="time"
-                          name="quietHoursStart"
-                          defaultValue={
-                            configuration?.quietHoursStart || "20:00"
-                          }
+                          type="checkbox"
+                          name="consentAttested"
                           required
                         />
+                        <span>
+                          I confirm that my store has the required lawful basis
+                          and customer consent for these automated calls.
+                        </span>
                       </label>
-                      <label>
-                        Quiet hours end
-                        <br />
-                        <input
-                          type="time"
-                          name="quietHoursEnd"
-                          defaultValue={configuration?.quietHoursEnd || "09:00"}
-                          required
-                        />
-                      </label>
-                      <label>
-                        Max calls per recipient / 24h
-                        <br />
-                        <input
-                          type="number"
-                          name="maxCallsPer24Hours"
-                          min="1"
-                          max="3"
-                          defaultValue={configuration?.maxCallsPer24Hours || 1}
-                          required
-                        />
-                      </label>
-                    </div>
-                    {useCase.id === "customer_win_back" && (
                       <div
                         style={{
-                          display: "grid",
-                          gap: "8px",
+                          display: "flex",
+                          gap: "12px",
+                          flexWrap: "wrap",
                           marginBottom: "12px",
                         }}
                       >
                         <label>
-                          Opted-in Shopify segment query
+                          Quiet hours start
                           <br />
                           <input
-                            name="segmentQuery"
-                            defaultValue={configuration?.segmentQuery || ""}
-                            placeholder="sms_subscription_status = 'SUBSCRIBED' AND last_order_date <= -90d"
+                            type="time"
+                            name="quietHoursStart"
+                            defaultValue={
+                              configuration?.quietHoursStart || "20:00"
+                            }
                             required
                           />
                         </label>
                         <label>
-                          Approved offer
+                          Quiet hours end
                           <br />
                           <input
-                            name="approvedOffer"
-                            defaultValue={configuration?.approvedOffer || ""}
+                            type="time"
+                            name="quietHoursEnd"
+                            defaultValue={
+                              configuration?.quietHoursEnd || "09:00"
+                            }
                             required
                           />
                         </label>
                         <label>
-                          Offer terms
-                          <br />
-                          <input
-                            name="offerTerms"
-                            defaultValue={configuration?.offerTerms || ""}
-                          />
-                        </label>
-                        <label>
-                          Offer URL
-                          <br />
-                          <input
-                            type="url"
-                            name="offerUrl"
-                            defaultValue={configuration?.offerUrl || ""}
-                            required
-                          />
-                        </label>
-                        <label>
-                          Minimum days between campaign calls
+                          Max calls per recipient / 24h
                           <br />
                           <input
                             type="number"
-                            name="campaignIntervalDays"
-                            min="7"
-                            max="365"
+                            name="maxCallsPer24Hours"
+                            min="1"
+                            max="3"
                             defaultValue={
-                              configuration?.campaignIntervalDays || 30
+                              configuration?.maxCallsPer24Hours || 1
                             }
                             required
                           />
                         </label>
                       </div>
-                    )}
-                  </>
-                )}
-                <s-button
-                  type="submit"
-                  variant={isDeactivation ? "secondary" : "primary"}
-                  disabled={
-                    !isDeactivation && (!hasApiKey || !automationEnabled)
-                  }
-                  {...(isPending ? { loading: true } : {})}
-                >
-                  {needsUpgrade
-                    ? isDeactivation
-                      ? "Deactivate"
-                      : "Upgrade agent template"
-                    : needsSafetyAttestation
+                      {useCase.id === "customer_win_back" && (
+                        <div
+                          style={{
+                            display: "grid",
+                            gap: "8px",
+                            marginBottom: "12px",
+                          }}
+                        >
+                          <label>
+                            Opted-in Shopify segment query
+                            <br />
+                            <input
+                              name="segmentQuery"
+                              defaultValue={configuration?.segmentQuery || ""}
+                              placeholder="sms_subscription_status = 'SUBSCRIBED' AND last_order_date <= -90d"
+                              required
+                            />
+                          </label>
+                          <label>
+                            Approved offer
+                            <br />
+                            <input
+                              name="approvedOffer"
+                              defaultValue={configuration?.approvedOffer || ""}
+                              required
+                            />
+                          </label>
+                          <label>
+                            Offer terms
+                            <br />
+                            <input
+                              name="offerTerms"
+                              defaultValue={configuration?.offerTerms || ""}
+                            />
+                          </label>
+                          <label>
+                            Offer URL
+                            <br />
+                            <input
+                              type="url"
+                              name="offerUrl"
+                              defaultValue={configuration?.offerUrl || ""}
+                              required
+                            />
+                          </label>
+                          <label>
+                            Minimum days between campaign calls
+                            <br />
+                            <input
+                              type="number"
+                              name="campaignIntervalDays"
+                              min="7"
+                              max="365"
+                              defaultValue={
+                                configuration?.campaignIntervalDays || 30
+                              }
+                              required
+                            />
+                          </label>
+                        </div>
+                      )}
+                    </>
+                  )}
+                  <s-button
+                    type="submit"
+                    variant={isDeactivation ? "secondary" : "primary"}
+                    disabled={!isDeactivation && !hasApiKey}
+                    {...(isPending ? { loading: true } : {})}
+                  >
+                    {needsUpgrade
                       ? isDeactivation
                         ? "Deactivate"
-                        : "Complete safety setup"
-                      : isDeactivation
-                        ? "Deactivate"
-                        : automationEnabled
-                          ? "Create & activate agent"
-                          : "Pending Shopify approval"}
-                </s-button>
-              </fetcher.Form>
+                        : "Upgrade agent template"
+                      : needsSafetyAttestation
+                        ? isDeactivation
+                          ? "Deactivate"
+                          : "Complete safety setup"
+                        : isDeactivation
+                          ? "Deactivate"
+                          : "Create & activate agent"}
+                  </s-button>
+                </fetcher.Form>
+              ) : (
+                <s-paragraph>
+                  Activation becomes available after Shopify approval and
+                  production workflow enablement.
+                </s-paragraph>
+              )}
             </s-stack>
           </s-section>
         );
