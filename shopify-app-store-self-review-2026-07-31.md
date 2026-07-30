@@ -97,6 +97,14 @@ codebase or are opt-in:
 - TypeScript and React Router type generation: passed.
 - React Router production build: passed.
 - Shopify app build validation: passed.
+- Production Vercel deployment `dpl_6C6uYmgs6VeiyxkN8WigWrMLFtSW`:
+  Ready and assigned to `https://dialedin-pi.vercel.app`.
+- Production root, privacy policy, terms, and manual-login replacement page:
+  HTTP 200.
+- Production health: HTTP 200 with database connected, configuration ready,
+  `mode: connector`, and `automationEnabled: false`.
+- Production worker endpoint: HTTP 503 with the expected explicit
+  automation-disabled response.
 - App Bridge: embedded `AppProvider` injects
   `https://cdn.shopify.com/shopifycloud/app-bridge.js`.
 - Authentication: embedded routes use `authenticate.admin`, App Bridge session
@@ -114,7 +122,8 @@ codebase or are opt-in:
    review account/API key/Agent ID, and a connector-flow screencast.
 4. Open the production app from a development store and interact with Home, Use
    cases, and Help so Shopify's two-hour App Bridge and session-token checks
-   receive fresh session data.
+   receive fresh session data. The signed-in browser surface wasn't available
+   to the automated review session, so this click-through remains manual.
 5. Keep automatic workflow activation disabled until Shopify approves the
    protected customer-data request and the matching production webhooks and
    secrets are deployed and tested.
