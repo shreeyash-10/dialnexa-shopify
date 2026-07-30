@@ -1,5 +1,6 @@
 import type { ActionFunctionArgs } from "react-router";
 import { authenticate } from "../shopify.server";
+import { automationWorkflowsEnabled } from "../services/automation-mode.server";
 import { enqueueOrderEventCall } from "../services/shopify-event-calls.server";
 import { fulfillmentWorkflowForStatus } from "../services/shopify-event-routing";
 
@@ -13,23 +14,32 @@ interface FulfillmentEventPayload {
 
 export const action = async ({ request }: ActionFunctionArgs) => {
   const { payload, shop, webhookId } = await authenticate.webhook(request);
+  if (!automationWorkflowsEnabled()) {
+    return new Response(null, { status: 204 });
+  }
   const event = payload as FulfillmentEventPayload;
-  if (!event.order_id || !event.status) return new Response(null, { status: 204 });
+  if (!event.order_id || !event.status)
+    return new Response(null, { status: 204 });
   const status = event.status.toLowerCase();
   const workflow = fulfillmentWorkflowForStatus(status);
   if (workflow === "failed_delivery") {
     await enqueueOrderEventCall({
-      shop, webhookId, orderId: event.order_id,
+      shop,
+      webhookId,
+      orderId: event.order_id,
       useCaseId: "failed_delivery",
       source: "fulfillment_events/create",
       eventMetadata: {
         delivery_failure_reason: event.message || status.replaceAll("_", " "),
-        reattempt_options: "A delivery team member must confirm any requested reattempt",
+        reattempt_options:
+          "A delivery team member must confirm any requested reattempt",
       },
     });
   } else if (workflow === "shipping_delay") {
     await enqueueOrderEventCall({
-      shop, webhookId, orderId: event.order_id,
+      shop,
+      webhookId,
+      orderId: event.order_id,
       useCaseId: "shipping_delay",
       source: "fulfillment_events/create",
       eventMetadata: {
@@ -42,12 +52,15 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     });
   } else if (workflow === "delivery_feedback") {
     await enqueueOrderEventCall({
-      shop, webhookId, orderId: event.order_id,
+      shop,
+      webhookId,
+      orderId: event.order_id,
       useCaseId: "delivery_feedback",
       source: "fulfillment_events/create",
       delayMinutes: 24 * 60,
       eventMetadata: {
-        support_route: "Request human follow-up for any delivery or product issue",
+        support_route:
+          "Request human follow-up for any delivery or product issue",
       },
     });
   }

@@ -1,7 +1,5 @@
 import type { LoaderFunctionArgs } from "react-router";
-import { redirect, Form, useLoaderData } from "react-router";
-
-import { login } from "../../shopify.server";
+import { redirect } from "react-router";
 
 import styles from "./styles.module.css";
 
@@ -12,47 +10,42 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     throw redirect(`/app?${url.searchParams.toString()}`);
   }
 
-  return { showForm: Boolean(login) };
+  return null;
 };
 
 export default function App() {
-  const { showForm } = useLoaderData<typeof loader>();
-
   return (
     <div className={styles.index}>
       <div className={styles.content}>
-        <h1 className={styles.heading}>
-          Automated Shopify order calls with Dialnexa
-        </h1>
+        <h1 className={styles.heading}>DialNexa for Shopify</h1>
         <p className={styles.text}>
-          Confirm new orders automatically with a personalized AI voice call.
+          Connect an existing DialNexa account and prepare voice-agent workflows
+          from Shopify admin.
         </p>
-        {showForm && (
-          <Form className={styles.form} method="post" action="/auth/login">
-            <label className={styles.label}>
-              <span>Shop domain</span>
-              <input className={styles.input} type="text" name="shop" />
-              <span>e.g: my-shop-domain.myshopify.com</span>
-            </label>
-            <button className={styles.button} type="submit">
-              Log in
-            </button>
-          </Form>
-        )}
+        <p className={styles.notice}>
+          Installed merchants should open DialNexa from Shopify admin. New
+          installations must begin from a Shopify-owned surface.
+        </p>
         <ul className={styles.list}>
           <li>
-            <strong>Automatic order confirmation.</strong> Start a call when a
-            customer completes checkout.
+            <strong>Secure account connection.</strong> Save a DialNexa API key
+            without displaying it again.
           </li>
           <li>
-            <strong>Personalized conversations.</strong> Pass the customer name,
-            order number, amount, and currency to your Dialnexa agent.
+            <strong>Voice-agent templates.</strong> Prepare dedicated agents
+            using your store name, domain, currency, and timezone.
           </li>
           <li>
-            <strong>Privacy-first processing.</strong> Customer phone numbers
-            are used in memory and are not stored by this app.
+            <strong>Controlled rollout.</strong> Customer-data workflows remain
+            unavailable until Shopify permissions and production automation are
+            enabled.
           </li>
         </ul>
+        <nav className={styles.links} aria-label="Legal and support">
+          <a href="/privacy">Privacy</a>
+          <a href="/terms">Terms</a>
+          <a href="mailto:support@dialnexa.com">Support</a>
+        </nav>
       </div>
     </div>
   );

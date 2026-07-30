@@ -1,4 +1,5 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
+import { automationWorkflowsEnabled } from "../services/automation-mode.server";
 import { hasValidBearerSecret } from "../services/bearer-auth.server";
 import { enqueueUseCaseCall } from "../services/use-case-call-queue.server";
 import {
@@ -21,6 +22,12 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   if (!hasValidBearerSecret(request, process.env.INTEGRATION_API_SECRET)) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
+  if (!automationWorkflowsEnabled()) {
+    return Response.json(
+      { error: "Automatic workflows are not enabled for this release." },
+      { status: 503 },
+    );
+  }
   return Response.json({
     use_cases: RUNTIME_USE_CASE_IDS.map((id) => getRuntimeUseCase(id)),
   });
@@ -29,6 +36,12 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 export const action = async ({ request }: ActionFunctionArgs) => {
   if (!hasValidBearerSecret(request, process.env.INTEGRATION_API_SECRET)) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  if (!automationWorkflowsEnabled()) {
+    return Response.json(
+      { error: "Automatic workflows are not enabled for this release." },
+      { status: 503 },
+    );
   }
 
   const contentLength = Number(request.headers.get("content-length") || 0);

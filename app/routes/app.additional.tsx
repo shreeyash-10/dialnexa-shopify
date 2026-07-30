@@ -1,33 +1,36 @@
 export default function AdditionalPage() {
   return (
-    <s-page heading="Additional page">
-      <s-section heading="Multiple pages">
+    <s-page heading="Help and app status">
+      <s-section heading="Current release">
         <s-paragraph>
-          The app template comes with an additional page which demonstrates how
-          to create multiple pages within app navigation using{" "}
-          <s-link
-            href="https://shopify.dev/docs/apps/tools/app-bridge"
-            target="_blank"
-          >
-            App Bridge
+          This version connects your Shopify store to an existing DialNexa
+          account and lets you review voice-agent templates.
+        </s-paragraph>
+        <s-paragraph>
+          Customer-data workflows and automatic calls remain disabled while
+          Shopify reviews the requested customer-data access and until
+          production automation is explicitly enabled.
+        </s-paragraph>
+      </s-section>
+      <s-section heading="Support">
+        <s-paragraph>
+          For setup help or questions about DialNexa, email{" "}
+          <s-link href="mailto:support@dialnexa.com">
+            support@dialnexa.com
           </s-link>
           .
         </s-paragraph>
-        <s-paragraph>
-          To create your own page and have it show up in the app navigation, add
-          a page inside <code>app/routes</code>, and a link to it in the{" "}
-          <code>&lt;ui-nav-menu&gt;</code> component found in{" "}
-          <code>app/routes/app.jsx</code>.
-        </s-paragraph>
       </s-section>
-      <s-section slot="aside" heading="Resources">
+      <s-section slot="aside" heading="Policies">
         <s-unordered-list>
           <s-list-item>
-            <s-link
-              href="https://shopify.dev/docs/apps/design-guidelines/navigation#app-nav"
-              target="_blank"
-            >
-              App nav best practices
+            <s-link href="/privacy" target="_blank">
+              Privacy policy
+            </s-link>
+          </s-list-item>
+          <s-list-item>
+            <s-link href="/terms" target="_blank">
+              Terms and conditions
             </s-link>
           </s-list-item>
         </s-unordered-list>

@@ -3,7 +3,7 @@ import type { MetaFunction } from "react-router";
 /* eslint-disable react/no-unescaped-entities -- Legal prose is intentionally rendered verbatim. */
 
 export const meta: MetaFunction = () => {
-  return [{ title: "Terms and Conditions | Dialnexa App" }];
+  return [{ title: "Terms and Conditions | DialNexa App" }];
 };
 
 export default function Terms() {
@@ -18,26 +18,27 @@ export default function Terms() {
       }}
     >
       <h1 style={{ fontSize: "2em", marginBottom: "10px" }}>
-        Terms and Conditions for Dialnexa Shopify App
+        Terms and Conditions for DialNexa Shopify App
       </h1>
       <p style={{ color: "#666" }}>
-        <strong>Last Updated:</strong> July 15, 2026
+        <strong>Last Updated:</strong> July 31, 2026
       </p>
 
       <p>
-        Welcome to the Dialnexa App for Shopify ("we", "our", or "us"). By
-        installing and using the Dialnexa App ("App") in your Shopify store, you
+        Welcome to the DialNexa App for Shopify ("we", "our", or "us"). By
+        installing and using the DialNexa App ("App") in your Shopify store, you
         agree to comply with and be bound by the following Terms and Conditions.
         Please review them carefully.
       </p>
 
       <h2>1. App Functionality and Service</h2>
       <p>
-        The App serves as a bridge between your Shopify store and the Dialnexa
-        AI Voice Agent API. It allows you to automate outbound phone calls based
-        on specific Shopify events (such as order creation). The App itself does
-        not provide the voice agent services; it strictly facilitates the
-        connection to your existing Dialnexa account.
+        The App connects your Shopify store to an existing DialNexa account. The
+        current release saves account configuration and displays available
+        voice-agent templates. Customer-data workflows and automatic calls are
+        unavailable until Shopify grants the required access and DialNexa
+        explicitly enables production automation. DialNexa provides the separate
+        voice-agent service.
       </p>
 
       <h2>2. Data Storage and Privacy</h2>
@@ -47,15 +48,15 @@ export default function Terms() {
         following data handling practices:
       </p>
 
-      <h3>2.1 Your Dialnexa Credentials</h3>
+      <h3>2.1 Your DialNexa Credentials</h3>
       <p>
-        <strong>We do not store your Dialnexa API keys on our servers.</strong>
+        <strong>We do not store your DialNexa API keys on our servers.</strong>
         <br />
-        When you enter your Dialnexa API credentials into the App's dashboard,
+        When you enter your DialNexa API credentials into the App's dashboard,
         this information is saved directly to your Shopify store's secure
         internal database using <strong>Shopify App Metafields</strong>. The App
-        dynamically retrieves these credentials from your Shopify store only
-        when an automated action is triggered. We retain the non-secret Dialnexa
+        retrieves these credentials only for requested App functions. If
+        workflow automation is later enabled, we retain the non-secret DialNexa
         agent and call identifiers needed to provision agents, route calls,
         prevent duplicate work, and troubleshoot delivery.
       </p>
@@ -68,16 +69,16 @@ export default function Terms() {
           call payloads.
         </strong>
         <br />
-        To facilitate outbound phone calls, the App requests the Shopify scopes
-        and webhooks declared for activated order, fulfillment, inventory,
-        customer-segment, and app-owned subscription workflows. These events and
+        The current connector release does not activate customer-data workflows.
+        If a merchant later enables an approved workflow, the App may use the
+        Shopify scopes and webhooks required for that workflow. Those events and
         API queries can contain Protected Customer Data. Shopify data is fetched
-        and processed in memory when a job runs. Authenticated integration payloads
-        are encrypted while queued and deleted after dispatch, terminal failure,
-        or skip. Pending stock-alert opt-ins are encrypted until notification or
-        cancellation. We retain operational
-        identifiers, keyed phone hashes, statuses, and post-call outcomes needed
-        for suppression, duplicate prevention, and troubleshooting.
+        and processed in memory when a job runs. Authenticated integration
+        payloads are encrypted while queued and deleted after dispatch, terminal
+        failure, or skip. Pending stock-alert opt-ins are encrypted until
+        notification or cancellation. We retain operational identifiers, keyed
+        phone hashes, statuses, and post-call outcomes needed for suppression,
+        duplicate prevention, and troubleshooting.
       </p>
 
       <h3>2.3 OAuth and Session Data</h3>
@@ -92,9 +93,9 @@ export default function Terms() {
       <ul>
         <li>
           <strong>Account Maintenance:</strong> You are responsible for
-          maintaining an active Dialnexa account and providing valid API
+          maintaining an active DialNexa account and providing valid API
           credentials. We are not responsible for failed automated calls due to
-          invalid Dialnexa API keys, insufficient funds on your Dialnexa
+          invalid DialNexa API keys, insufficient funds on your DialNexa
           account, or misconfigured Agent IDs.
         </li>
         <li>
@@ -116,7 +117,7 @@ export default function Terms() {
         consequential, or exemplary damages, including without limitation,
         damages for loss of profits, goodwill, use, data, or other intangible
         losses, arising out of or relating to the use of, or inability to use,
-        the App. We are not responsible for any actions taken by the Dialnexa AI
+        the App. We are not responsible for any actions taken by the DialNexa AI
         Voice Agent during calls.
       </p>
 

@@ -1,5 +1,6 @@
 import type { ActionFunctionArgs } from "react-router";
 import { authenticate } from "../shopify.server";
+import { automationWorkflowsEnabled } from "../services/automation-mode.server";
 import { enqueueSubscriptionFailureCall } from "../services/shopify-event-calls.server";
 
 interface BillingFailurePayload {
@@ -10,6 +11,9 @@ interface BillingFailurePayload {
 
 export const action = async ({ request }: ActionFunctionArgs) => {
   const { payload, shop, webhookId } = await authenticate.webhook(request);
+  if (!automationWorkflowsEnabled()) {
+    return new Response(null, { status: 204 });
+  }
   const event = payload as BillingFailurePayload;
   const contractId =
     event.admin_graphql_api_subscription_contract_id ||

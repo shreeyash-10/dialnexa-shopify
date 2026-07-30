@@ -8,6 +8,7 @@ import { useFetcher, useLoaderData } from "react-router";
 import { useAppBridge } from "@shopify/app-bridge-react";
 import { authenticate } from "../shopify.server";
 import { boundary } from "@shopify/shopify-app-react-router/server";
+import { automationWorkflowsEnabled } from "../services/automation-mode.server";
 
 const APP_METAFIELD_NAMESPACE = "dialnexa";
 
@@ -39,7 +40,10 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   const callingEnabled =
     data?.currentAppInstallation?.callingEnabledMetafield?.value === "true";
 
-  return { config: { agentId, hasApiKey, callingEnabled } };
+  return {
+    automationEnabled: automationWorkflowsEnabled(),
+    config: { agentId, hasApiKey, callingEnabled },
+  };
 };
 
 export const action = async ({ request }: ActionFunctionArgs) => {
@@ -48,7 +52,9 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
   const apiKey = String(formData.get("apiKey") || "").trim();
   const agentId = String(formData.get("agentId") || "").trim();
-  const callingEnabled = formData.get("callingEnabled") === "on";
+  const automationEnabled = automationWorkflowsEnabled();
+  const callingEnabled =
+    automationEnabled && formData.get("callingEnabled") === "on";
 
   if (!agentId) {
     return {
@@ -142,7 +148,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 };
 
 export default function Index() {
-  const { config } = useLoaderData<typeof loader>();
+  const { automationEnabled, config } = useLoaderData<typeof loader>();
   const fetcher = useFetcher<typeof action>();
   const shopify = useAppBridge();
 
@@ -159,13 +165,21 @@ export default function Index() {
   }, [fetcher.data, shopify]);
 
   return (
-    <s-page heading="Dialnexa App Integration">
-      <s-section heading="Connect your Dialnexa Account">
+    <s-page heading="DialNexa account connection">
+      <s-section heading="Connect your DialNexa account">
         <s-paragraph>
-          Enter your Dialnexa API Key and default Agent ID to connect your
-          store. Once connected, this app will automatically trigger an outbound
-          call whenever a new order is placed.
+          Save your DialNexa API key and default Agent ID for this store. Your
+          API key is never displayed after it is saved.
         </s-paragraph>
+        {!automationEnabled && (
+          <s-banner tone="warning" heading="Workflow activation is pending">
+            <s-paragraph>
+              Shopify customer-data access has been requested. Automatic
+              customer calls stay disabled until that access is approved and the
+              production workflows are enabled.
+            </s-paragraph>
+          </s-banner>
+        )}
 
         <fetcher.Form method="POST" style={{ marginTop: "20px" }}>
           <s-stack direction="block" gap="base">
@@ -230,23 +244,25 @@ export default function Index() {
                 required
               />
 
-              <label
-                htmlFor="callingEnabled"
-                style={{
-                  display: "flex",
-                  gap: "8px",
-                  alignItems: "center",
-                  marginTop: "16px",
-                }}
-              >
-                <input
-                  id="callingEnabled"
-                  type="checkbox"
-                  name="callingEnabled"
-                  defaultChecked={config.callingEnabled}
-                />
-                Enable automatic calls for new orders
-              </label>
+              {automationEnabled && (
+                <label
+                  htmlFor="callingEnabled"
+                  style={{
+                    display: "flex",
+                    gap: "8px",
+                    alignItems: "center",
+                    marginTop: "16px",
+                  }}
+                >
+                  <input
+                    id="callingEnabled"
+                    type="checkbox"
+                    name="callingEnabled"
+                    defaultChecked={config.callingEnabled}
+                  />
+                  Enable automatic calls for new orders
+                </label>
+              )}
             </s-box>
 
             <s-button
@@ -260,24 +276,38 @@ export default function Index() {
         </fetcher.Form>
       </s-section>
 
-      <s-section heading="How it works">
-        <s-unordered-list>
-          <s-list-item>
-            We have registered an `ORDERS_CREATE` webhook on your Shopify store.
-          </s-list-item>
-          <s-list-item>
-            When a customer completes a checkout, Shopify notifies this app.
-          </s-list-item>
-          <s-list-item>
-            If calling is enabled and the order contains a valid international
-            phone number, this app starts one Dialnexa call for that order.
-          </s-list-item>
-          <s-list-item>
-            Duplicate Shopify webhook deliveries are ignored, and no customer
-            phone number is stored by this app.
-          </s-list-item>
-        </s-unordered-list>
-      </s-section>
+      {automationEnabled ? (
+        <s-section heading="How automatic calling works">
+          <s-unordered-list>
+            <s-list-item>
+              Shopify sends supported workflow events to the app.
+            </s-list-item>
+            <s-list-item>
+              When calling is enabled and an event contains a valid
+              international phone number, the app starts one DialNexa call.
+            </s-list-item>
+            <s-list-item>
+              Duplicate event deliveries are ignored, and raw customer phone
+              numbers are removed after processing.
+            </s-list-item>
+          </s-unordered-list>
+        </s-section>
+      ) : (
+        <s-section heading="Current release">
+          <s-unordered-list>
+            <s-list-item>
+              Connect an existing DialNexa account to this Shopify store.
+            </s-list-item>
+            <s-list-item>
+              Save a default agent for future workflow configuration.
+            </s-list-item>
+            <s-list-item>
+              No customer/order data is accessed and no automatic call is
+              initiated while workflow activation is pending.
+            </s-list-item>
+          </s-unordered-list>
+        </s-section>
+      )}
     </s-page>
   );
 }

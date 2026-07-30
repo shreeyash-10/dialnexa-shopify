@@ -3,7 +3,7 @@ import type { MetaFunction } from "react-router";
 /* eslint-disable react/no-unescaped-entities -- Legal prose is intentionally rendered verbatim. */
 
 export const meta: MetaFunction = () => {
-  return [{ title: "Privacy Policy | Dialnexa App" }];
+  return [{ title: "Privacy Policy | DialNexa App" }];
 };
 
 export default function Privacy() {
@@ -18,16 +18,16 @@ export default function Privacy() {
       }}
     >
       <h1 style={{ fontSize: "2em", marginBottom: "10px" }}>
-        Privacy Policy for Dialnexa Shopify App
+        Privacy Policy for DialNexa Shopify App
       </h1>
       <p style={{ color: "#666" }}>
-        <strong>Last Updated:</strong> July 15, 2026
+        <strong>Last Updated:</strong> July 31, 2026
       </p>
 
       <p>
-        At Dialnexa ("we", "our", or "us"), we prioritize your privacy and data
+        At DialNexa ("we", "our", or "us"), we prioritize your privacy and data
         security. This Privacy Policy outlines how we collect, use, and protect
-        your information when you use the Dialnexa App ("App") for Shopify.
+        your information when you use the DialNexa App ("App") for Shopify.
       </p>
 
       <h2>1. Information We Collect</h2>
@@ -43,14 +43,16 @@ export default function Privacy() {
           API requests on your behalf.
         </li>
         <li>
-          <strong>Operational Call Data:</strong> We store Shopify resource and
-          webhook identifiers, use-case identifiers, call status, retry count,
-          timestamps, a one-way keyed phone hash, post-call outcome, and the
-          Dialnexa call identifier when available. Integration-triggered phone
-          numbers and call metadata are encrypted while queued and deleted after
-          dispatch, terminal failure, or skip. Back-in-stock opt-in details are
-          encrypted while the alert is pending and deleted after notification,
-          cancellation, customer redaction, shop redaction, or uninstall.
+          <strong>Operational Call Data:</strong> Customer-data workflows are
+          disabled in the current connector release. If an approved workflow is
+          later enabled, we store Shopify resource and webhook identifiers,
+          use-case identifiers, call status, retry count, timestamps, a one-way
+          keyed phone hash, post-call outcome, and the DialNexa call identifier
+          when available. Integration-triggered phone numbers and call metadata
+          are encrypted while queued and deleted after dispatch, terminal
+          failure, or skip. Back-in-stock opt-in details are encrypted while the
+          alert is pending and deleted after notification, cancellation,
+          customer redaction, shop redaction, or uninstall.
         </li>
       </ul>
 
@@ -61,7 +63,7 @@ export default function Privacy() {
       </p>
       <ul>
         <li>
-          <strong>Dialnexa API Keys:</strong> Your Dialnexa credentials are
+          <strong>DialNexa API Keys:</strong> Your DialNexa credentials are
           saved directly to your Shopify store's internal database (Shopify App
           Metafields). We do not store them on our servers.
         </li>
@@ -72,7 +74,8 @@ export default function Privacy() {
           and call metadata are stored only as an AES-256-GCM encrypted queue
           payload, never logged, and erased as soon as the job reaches a
           terminal state. Pending stock-alert opt-ins use the same encryption
-          until fulfilled or cancelled. We do not store call recordings or transcripts.
+          until fulfilled or cancelled. We do not store call recordings or
+          transcripts.
         </li>
       </ul>
 
@@ -80,7 +83,10 @@ export default function Privacy() {
       <p>The minimal information we collect is used exclusively for:</p>
       <ul>
         <li>Authenticating your Shopify store's requests.</li>
-        <li>Routing the automated webhook triggers to the Dialnexa API.</li>
+        <li>
+          Routing approved automated workflow triggers to the DialNexa API when
+          automation is enabled.
+        </li>
         <li>Ensuring the security and integrity of the App's integration.</li>
         <li>Preventing duplicate calls and diagnosing failed call requests.</li>
       </ul>
@@ -89,9 +95,9 @@ export default function Privacy() {
       <p>
         We do not sell, rent, or trade any of your information to third parties.
         The App solely shares the necessary customer phone number and order
-        details directly with the <strong>Dialnexa AI Voice API</strong> at the
-        exact moment a call needs to be triggered, according to your
-        configurations.
+        details directly with the <strong>DialNexa AI Voice API</strong> only
+        when an approved workflow is enabled and a call is triggered according
+        to your configuration.
       </p>
 
       <h2>5. Data Retention and Deletion</h2>
@@ -100,7 +106,7 @@ export default function Privacy() {
         delete your Shopify OAuth tokens and operational call records from our
         database upon receiving the <code>app/uninstalled</code> webhook from
         Shopify. We also process Shopify's mandatory customer and shop redaction
-        webhooks. Since your Dialnexa configuration is saved in Shopify
+        webhooks. Since your DialNexa configuration is saved in Shopify
         Metafields, that configuration is tied to your Shopify store and
         governed by Shopify's data retention policies.
       </p>

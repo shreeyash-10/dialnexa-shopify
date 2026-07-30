@@ -31,3 +31,6 @@ database.sqlite
 .react-router/
 .vercel
 .env*.local
+
+# Preserve local iCloud conflict copies without loading them as routes or migrations
+/conflict-backups/

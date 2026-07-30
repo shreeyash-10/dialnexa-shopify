@@ -2,6 +2,7 @@ import { Prisma } from "@prisma/client";
 import type { ActionFunctionArgs } from "react-router";
 import db from "../db.server";
 import { authenticate } from "../shopify.server";
+import { automationWorkflowsEnabled } from "../services/automation-mode.server";
 
 interface OrderCreatedPayload {
   id?: number | string;
@@ -9,6 +10,9 @@ interface OrderCreatedPayload {
 
 export const action = async ({ request }: ActionFunctionArgs) => {
   const { payload, shop, webhookId } = await authenticate.webhook(request);
+  if (!automationWorkflowsEnabled()) {
+    return new Response(null, { status: 204 });
+  }
   const orderId = String((payload as OrderCreatedPayload).id || "");
 
   if (!orderId) {

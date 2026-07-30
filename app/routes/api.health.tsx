@@ -1,12 +1,15 @@
 import type { LoaderFunctionArgs } from "react-router";
 import db from "../db.server";
+import { automationWorkflowsEnabled } from "../services/automation-mode.server";
 
 const REQUIRED_ENVIRONMENT = [
   "SHOPIFY_API_KEY",
   "SHOPIFY_API_SECRET",
   "SHOPIFY_APP_URL",
-  "SCOPES",
   "DATABASE_URL",
+] as const;
+
+const AUTOMATION_ENVIRONMENT = [
   "CRON_SECRET",
   "PHONE_HASH_SECRET",
   "CALL_PAYLOAD_ENCRYPTION_KEY",
@@ -37,8 +40,12 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   if (request.method !== "GET") {
     return new Response("Method not allowed", { status: 405 });
   }
-  const missing = REQUIRED_ENVIRONMENT.filter((name) => !process.env[name]);
-  const invalid = invalidEnvironment();
+  const automationEnabled = automationWorkflowsEnabled();
+  const requiredEnvironment = automationEnabled
+    ? [...REQUIRED_ENVIRONMENT, ...AUTOMATION_ENVIRONMENT]
+    : REQUIRED_ENVIRONMENT;
+  const missing = requiredEnvironment.filter((name) => !process.env[name]);
+  const invalid = automationEnabled ? invalidEnvironment() : [];
   let database = false;
   try {
     await db.$queryRaw`SELECT 1`;
@@ -50,6 +57,8 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   return Response.json(
     {
       status: ready ? "ready" : "not_ready",
+      mode: automationEnabled ? "automation" : "connector",
+      automationEnabled,
       database,
       configuration: missing.length === 0 && invalid.length === 0,
       ...(missing.length ? { missing } : {}),
