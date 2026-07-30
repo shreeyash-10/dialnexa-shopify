@@ -50,6 +50,13 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   const agentId = String(formData.get("agentId") || "").trim();
   const callingEnabled = formData.get("callingEnabled") === "on";
 
+  if (!agentId) {
+    return {
+      success: false,
+      errors: [{ message: "Agent ID is required." }],
+    };
+  }
+
   const installationResponse = await admin.graphql(`
     #graphql
     query DialnexaInstallationForUpdate {
@@ -84,21 +91,18 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     {
       ownerId: appId,
       namespace: APP_METAFIELD_NAMESPACE,
+      key: "agent_id",
+      value: agentId,
+      type: "single_line_text_field",
+    },
+    {
+      ownerId: appId,
+      namespace: APP_METAFIELD_NAMESPACE,
       key: "calling_enabled",
       value: String(callingEnabled),
       type: "boolean",
     },
   ];
-
-  if (agentId) {
-    metafieldsSetInput.push({
-      ownerId: appId,
-      namespace: APP_METAFIELD_NAMESPACE,
-      key: "agent_id",
-      value: agentId,
-      type: "single_line_text_field",
-    });
-  }
 
   if (apiKey) {
     metafieldsSetInput.push({
@@ -158,9 +162,9 @@ export default function Index() {
     <s-page heading="Dialnexa App Integration">
       <s-section heading="Connect your Dialnexa Account">
         <s-paragraph>
-          Enter your Dialnexa API key to connect your store, then open Use cases
-          to create merchant-specific agents directly in Dialnexa. The default
-          Agent ID below remains available for existing installations.
+          Enter your Dialnexa API Key and default Agent ID to connect your
+          store. Once connected, this app will automatically trigger an outbound
+          call whenever a new order is placed.
         </s-paragraph>
 
         <fetcher.Form method="POST" style={{ marginTop: "20px" }}>
@@ -209,7 +213,7 @@ export default function Index() {
                   fontWeight: "bold",
                 }}
               >
-                Legacy default Agent ID (optional)
+                Default Agent ID
               </label>
               <input
                 id="agentId"
@@ -223,6 +227,7 @@ export default function Index() {
                   borderRadius: "4px",
                   border: "1px solid #ccc",
                 }}
+                required
               />
 
               <label
@@ -240,7 +245,7 @@ export default function Index() {
                   name="callingEnabled"
                   defaultChecked={config.callingEnabled}
                 />
-                Enable legacy default-agent calls for new orders
+                Enable automatic calls for new orders
               </label>
             </s-box>
 
